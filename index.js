@@ -279,27 +279,28 @@ Swarm.prototype._drain = function () {
   var peer = self._queue.shift()
   if (!peer) return // queue could be empty
 
+  debug('tcp connect attempt to %s', peer.addr)
   var parts = addrToIPPort(peer.addr)
   var conn = peer.conn = net.connect(parts[1], parts[0])
-  debug('tcp connect attempt to %s', peer.addr)
 
   conn.on('connect', function () { peer.onConnect() })
   conn.on('error', function () { conn.destroy() })
   peer.setTimeout()
 
   // When connection closes, attempt reconnect after timeout (with exponential backoff)
-  var addr = peer.addr
   conn.on('close', function () {
     if (self.destroyed || peer.retries >= RECONNECT_WAIT.length) {
       return
     }
 
     function readd () {
-      self._queue.push(Peer.createOutgoingTCPPeer(addr, self))
+      var newPeer = Peer.createOutgoingTCPPeer(peer.addr, self)
+      newPeer.retries = peer.retries + 1
+      self._queue.push(newPeer)
       self._drain()
     }
 
-    var readdTimeout = setTimeout(readd, RECONNECT_WAIT[peer.retries++])
+    var readdTimeout = setTimeout(readd, RECONNECT_WAIT[peer.retries])
     if (readdTimeout.unref) readdTimeout.unref()
   })
 }
