@@ -274,7 +274,7 @@ Swarm.prototype.destroy = function (onclose) {
 Swarm.prototype._drain = function () {
   var self = this
   if (self.destroyed || self.paused || self.numConns >= self.maxConns) return
-  debug('drain (%s queued, %s/%s peers)', this.numQueued, this.numPeers, this.maxPeers)
+  debug('drain (%s queued, %s/%s peers)', self.numQueued, self.numPeers, self.maxConns)
 
   var peer = self._queue.shift()
   if (!peer) return // queue could be empty
