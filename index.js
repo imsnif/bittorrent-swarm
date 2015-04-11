@@ -2,6 +2,7 @@ module.exports = Swarm
 
 var addrToIPPort = require('addr-to-ip-port') // browser exclude
 var debug = require('debug')('bittorrent-swarm')
+var dezalgo = require('dezalgo')
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
 var net = require('net') // browser exclude
@@ -207,15 +208,22 @@ Swarm.prototype.listen = function (port, onlistening) {
     onlistening = port
     port = undefined
   }
+  if (onlistening) onlistening = dezalgo(onlistening)
+
   if (self.listening) throw new Error('swarm already listening')
 
-  self._port = port || TCPPool.getDefaultListenPort()
-  if (onlistening) self.once('listening', onlistening)
+  if (process.browser) {
+    onlistening()
+  } else {
+    self._port = port || TCPPool.getDefaultListenPort(self.infoHashHex)
+    if (onlistening) self.once('listening', onlistening)
 
-  debug('listen %s', port)
+    debug('listen %s', port)
 
-  var pool = TCPPool.addSwarm(self)
-  self.server = pool.server
+    var pool = TCPPool.addSwarm(self)
+    self.server = pool.server
+  }
+
 }
 
 Swarm.prototype._onListening = function (port) {
