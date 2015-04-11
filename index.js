@@ -223,7 +223,6 @@ Swarm.prototype.listen = function (port, onlistening) {
     var pool = TCPPool.addSwarm(self)
     self.server = pool.server
   }
-
 }
 
 Swarm.prototype._onListening = function (port) {
