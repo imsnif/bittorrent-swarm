@@ -283,8 +283,8 @@ Swarm.prototype._drain = function () {
   var parts = addrToIPPort(peer.addr)
   var conn = peer.conn = net.connect(parts[1], parts[0])
 
-  conn.on('connect', function () { peer.onConnect() })
-  conn.on('error', function () { conn.destroy() })
+  conn.once('connect', function () { peer.onConnect() })
+  conn.once('error', function () { peer.destroy() })
   peer.setTimeout()
 
   // When connection closes, attempt reconnect after timeout (with exponential backoff)
