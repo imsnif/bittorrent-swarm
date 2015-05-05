@@ -273,7 +273,10 @@ Swarm.prototype.destroy = function (onclose) {
  */
 Swarm.prototype._drain = function () {
   var self = this
-  if (self.destroyed || self.paused || self.numConns >= self.maxConns) return
+  if (typeof net.connect !== 'function' || self.destroyed || self.paused ||
+      self.numConns >= self.maxConns) {
+    return
+  }
   debug('drain (%s queued, %s/%s peers)', self.numQueued, self.numPeers, self.maxConns)
 
   var peer = self._queue.shift()
