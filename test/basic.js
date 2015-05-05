@@ -117,21 +117,21 @@ test('swarm join', function (t) {
 
       swarm2.addPeer('127.0.0.1:' + swarm1.address().port)
 
-      swarm1.on('wire', function (wire) {
+      swarm1.on('wire', function (wire, addr) {
         t.ok(wire, 'Peer join our swarm via listening port')
 
         t.equal(swarm1.wires.length, 1)
-        t.ok(/127\.0\.0\.1:\d{1,5}/.test(wire.remoteAddress))
+        t.ok(/127\.0\.0\.1:\d{1,5}/.test(addr))
         t.equal(wire.peerId.toString('hex'), peerId2)
 
         swarm1.destroy()
       })
 
-      swarm2.on('wire', function (wire) {
+      swarm2.on('wire', function (wire, addr) {
         t.ok(wire, 'Joined swarm, got wire')
 
         t.equal(swarm2.wires.length, 1)
-        t.ok(/127\.0\.0\.1:\d{1,5}/.test(wire.remoteAddress))
+        t.ok(/127\.0\.0\.1:\d{1,5}/.test(addr))
         t.equal(wire.peerId.toString('hex'), peerId)
 
         swarm2.destroy()
