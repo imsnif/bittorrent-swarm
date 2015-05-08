@@ -11,7 +11,7 @@ var speedometer = require('speedometer')
 var TCPPool = require('./lib/tcp-pool')
 
 var MAX_CONNS = 55
-var RECONNECT_WAIT = [ 1000, 5000, 15000, 30000, 60000, 120000, 300000, 600000 ]
+var RECONNECT_WAIT = [ 1000, 5000, 15000 ]
 
 inherits(Swarm, EventEmitter)
 
