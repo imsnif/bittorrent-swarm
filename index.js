@@ -199,14 +199,15 @@ Swarm.prototype.resume = function () {
 
 /**
  * Listen on the given port for peer connections.
- * @param  {number=} port
- * @param  {function} onlistening
+ * @param {number} port
+ * @param {string=} hostname
+ * @param {function=} onlistening
  */
-Swarm.prototype.listen = function (port, onlistening) {
+Swarm.prototype.listen = function (port, hostname, onlistening) {
   var self = this
-  if (typeof port === 'function') {
-    onlistening = port
-    port = undefined
+  if (typeof hostname === 'function') {
+    onlistening = hostname
+    hostname = undefined
   }
   if (onlistening) onlistening = dezalgo(onlistening)
 
@@ -216,6 +217,7 @@ Swarm.prototype.listen = function (port, onlistening) {
     onlistening()
   } else {
     self._port = port || TCPPool.getDefaultListenPort(self.infoHashHex)
+    self._hostname = hostname
     if (onlistening) self.once('listening', onlistening)
 
     debug('listen %s', port)

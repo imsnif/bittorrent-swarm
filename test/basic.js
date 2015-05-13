@@ -92,12 +92,12 @@ test('two swarms listen on same port (implicit)', function (t) {
     }
   }
 
-  swarm1.listen(function () {
+  swarm1.listen(0, function () {
     swarm1Port = swarm1.address().port
     maybeDone()
   })
 
-  swarm2.listen(function (port2) {
+  swarm2.listen(0, function (port2) {
     swarm2Port = swarm2.address().port
     maybeDone()
   })
