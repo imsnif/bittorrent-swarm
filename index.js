@@ -286,7 +286,11 @@ Swarm.prototype._drain = function () {
 
   debug('tcp connect attempt to %s', peer.addr)
   var parts = addrToIPPort(peer.addr)
-  var conn = peer.conn = net.connect(parts[1], parts[0])
+  var conn = peer.conn = net.connect({
+    port: parts[1],
+    host: parts[0],
+    localAddress: self._hostname
+  })
 
   conn.once('connect', function () { peer.onConnect() })
   conn.once('error', function () { peer.destroy() })
