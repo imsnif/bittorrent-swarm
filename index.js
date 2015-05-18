@@ -106,8 +106,8 @@ Object.defineProperty(Swarm.prototype, 'numPeers', {
 
 /**
  * Add a peer to the swarm.
- * @param {string|Peer} peer    "ip:port" string or simple-peer instance
- * @param {string}      peer.id bittorrent peer id (only when `peer` is simple-peer)
+ * @param {string|simple-peer} peer    "ip:port" string or simple-peer instance
+ * @param {string}             peer.id bittorrent peer id (when `peer` is simple-peer)
  */
 Swarm.prototype.addPeer = function (peer) {
   var self = this
@@ -158,15 +158,15 @@ Swarm.prototype._addIncomingPeer = function (peer) {
 }
 
 /**
- * Private method to remove a peer from the swarm without calling _drain().
+ * Remove a peer from the swarm.
  * @param  {string} id for tcp peers, "ip:port" string; for webrtc peers, peerId
  */
-Swarm.prototype._removePeer = function (id) {
+Swarm.prototype.removePeer = function (id) {
   var self = this
   var peer = self._peers[id]
   if (!peer) return
 
-  debug('_removePeer %s', id)
+  debug('removePeer %s', id)
 
   self._peers[id] = null
   self._peersLength -= 1
@@ -256,7 +256,7 @@ Swarm.prototype.destroy = function (onclose) {
   debug('destroy')
 
   for (var id in self._peers) {
-    self._removePeer(id)
+    self.removePeer(id)
   }
 
   TCPPool.removeSwarm(self, function () {
