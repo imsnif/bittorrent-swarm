@@ -259,10 +259,8 @@ Swarm.prototype.destroy = function (onclose) {
     self._removePeer(id)
   }
 
-  TCPPool.removeSwarm(self)
-
-  // TODO: only emit when all peers and server is destroyed
-  process.nextTick(function () {
+  TCPPool.removeSwarm(self, function () {
+    // TODO: only emit when all peers are destroyed
     self.emit('close')
   })
 }
