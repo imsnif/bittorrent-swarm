@@ -292,8 +292,8 @@ Swarm.prototype._drain = function () {
   })
 
   conn.once('connect', function () { peer.onConnect() })
-  peer.setTimeout()
   conn.once('error', function (err) { peer.destroy(err) })
+  peer.setConnectTimeout()
 
   // When connection closes, attempt reconnect after timeout (with exponential backoff)
   conn.on('close', function () {
