@@ -112,7 +112,7 @@ Object.defineProperty(Swarm.prototype, 'numPeers', {
 Swarm.prototype.addPeer = function (peer) {
   var self = this
   if (self.destroyed) {
-    if (peer && peer.destroy) peer.destroy()
+    if (peer && peer.destroy) peer.destroy(new Error('swarm already destroyed'))
     return
   }
   if (typeof peer === 'string' && !self._validAddr(peer)) {
@@ -146,12 +146,13 @@ Swarm.prototype.addPeer = function (peer) {
  */
 Swarm.prototype._addIncomingPeer = function (peer) {
   var self = this
-  if (self.destroyed || self.paused) return peer.destroy()
+  if (self.destroyed) return peer.destroy(new Error('swarm already destroyed'))
+  if (self.paused) return peer.destroy(new Error('swarm paused'))
 
   if (!self._validAddr(peer.addr)) {
-    debug('ignoring invalid peer %s (from incoming)', peer.addr)
-    return peer.destroy()
+    return peer.destroy(new Error('invalid addr ' + peer.addr + ' (from incoming)'))
   }
+  debug('_addIncomingPeer %s', peer.id)
 
   self._peers[peer.id] = peer
   self._peersLength += 1
@@ -291,12 +292,18 @@ Swarm.prototype._drain = function () {
   })
 
   conn.once('connect', function () { peer.onConnect() })
-  conn.once('error', function () { peer.destroy() })
   peer.setTimeout()
+  conn.once('error', function (err) { peer.destroy(err) })
 
   // When connection closes, attempt reconnect after timeout (with exponential backoff)
   conn.on('close', function () {
-    if (self.destroyed || peer.retries >= RECONNECT_WAIT.length) {
+    if (self.destroyed) return
+
+    if (peer.retries >= RECONNECT_WAIT.length) {
+      debug(
+        'conn %s closed: will not re-add (max %s attempts)',
+        peer.addr, RECONNECT_WAIT.length
+      )
       return
     }
 
@@ -307,7 +314,13 @@ Swarm.prototype._drain = function () {
       self._drain()
     }
 
-    var readdTimeout = setTimeout(readd, RECONNECT_WAIT[peer.retries])
+    var ms = RECONNECT_WAIT[peer.retries]
+    debug(
+      'conn %s closed: will re-add to queue in %sms (attempt %s)',
+      peer.addr, ms, peer.retries + 1
+    )
+
+    var readdTimeout = setTimeout(readd, ms)
     if (readdTimeout.unref) readdTimeout.unref()
   })
 }
