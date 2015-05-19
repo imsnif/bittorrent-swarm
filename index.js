@@ -274,6 +274,7 @@ Swarm.prototype.destroy = function (onclose) {
  */
 Swarm.prototype._drain = function () {
   var self = this
+  debug('_drain numConns %s maxConns %s', self.numConns, self.maxConns)
   if (typeof net.connect !== 'function' || self.destroyed || self.paused ||
       self.numConns >= self.maxConns) {
     return
@@ -285,9 +286,11 @@ Swarm.prototype._drain = function () {
 
   debug('tcp connect attempt to %s', peer.addr)
   var parts = addrToIPPort(peer.addr)
+  var host = parts[0]
+  var port = parts[1]
   var conn = peer.conn = net.connect({
-    port: parts[1],
-    host: parts[0],
+    host: host,
+    port: port,
     localAddress: self._hostname
   })
 
@@ -339,7 +342,7 @@ Swarm.prototype._onError = function (err) {
 Swarm.prototype._validAddr = function (addr) {
   var self = this
   var parts = addrToIPPort(addr)
-  var ip = parts[0]
+  var host = parts[0]
   var port = parts[1]
-  return port > 0 && port < 65535 && !(ip === '127.0.0.1' && port === self._port)
+  return port > 0 && port < 65535 && !(host === '127.0.0.1' && port === self._port)
 }
