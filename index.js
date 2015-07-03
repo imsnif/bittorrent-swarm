@@ -140,6 +140,32 @@ Swarm.prototype.addPeer = function (peer) {
 }
 
 /**
+ * Add a web peer to the swarm.
+ * @param {string} webPeer     web peer's URL
+ */
+Swarm.prototype.addWebPeer = function (webPeer, parsedTorrent) {
+  var self = this
+  if (self.destroyed) return
+
+  if (!/^https?:\/\/.+/.test(webPeer)) {
+    debug('ignoring invalid web peer %s (from swarm.addWebPeer)', webPeer)
+    return
+  }
+
+  var id = webPeer
+  if (self._peers[id]) return
+
+  debug('addWebPeer %s', id)
+
+  var newPeer
+  // `webPeer` in an url string
+  newPeer = Peer.createWebPeer(webPeer, parsedTorrent, self)
+
+  self._peers[newPeer.id] = newPeer
+  self._peersLength += 1
+}
+
+/**
  * Called whenever a new incoming TCP peer connects to this swarm. Called with a peer
  * that has already sent a handshake.
  * @param {Peer} peer
