@@ -140,28 +140,24 @@ Swarm.prototype.addPeer = function (peer) {
 }
 
 /**
- * Add a web peer to the swarm.
- * @param {string} webPeer     web peer's URL
+ * Add a web seed to the swarm.
+ * @param {string} url web seed url
+ * @param {Object} parsedTorrent
  */
-Swarm.prototype.addWebPeer = function (webPeer, parsedTorrent) {
+Swarm.prototype.addWebSeed = function (url, parsedTorrent) {
   var self = this
   if (self.destroyed) return
 
-  if (!/^https?:\/\/.+/.test(webPeer)) {
-    debug('ignoring invalid web peer %s (from swarm.addWebPeer)', webPeer)
+  if (!/^https?:\/\/.+/.test(url)) {
+    debug('ignoring invalid web seed %s (from swarm.addWebSeed)', url)
     return
   }
 
-  var id = webPeer
-  if (self._peers[id]) return
+  if (self._peers[url]) return
 
-  debug('addWebPeer %s', id)
+  debug('addWebSeed %s', url)
 
-  var newPeer
-  // `webPeer` in an url string
-  newPeer = Peer.createWebPeer(webPeer, parsedTorrent, self)
-
-  self._peers[newPeer.id] = newPeer
+  self._peers[url] = Peer.createWebPeer(url, parsedTorrent, self)
   self._peersLength += 1
 }
 
