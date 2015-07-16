@@ -161,7 +161,8 @@ Swarm.prototype.addWebSeed = function (url, parsedTorrent) {
 
   debug('addWebSeed %s', url)
 
-  self._peers[url] = Peer.createWebPeer(url, parsedTorrent, self)
+  var newPeer = Peer.createWebPeer(url, parsedTorrent, self)
+  self._peers[newPeer.id] = newPeer
   self._peersLength += 1
 }
 
@@ -314,14 +315,15 @@ Swarm.prototype._drain = function () {
   if (!peer) return // queue could be empty
 
   debug('tcp connect attempt to %s', peer.addr)
+
   var parts = addrToIPPort(peer.addr)
-  var host = parts[0]
-  var port = parts[1]
-  var conn = peer.conn = net.connect({
-    host: host,
-    port: port,
-    localAddress: self._hostname
-  })
+  var opts = {
+    host: parts[0],
+    port: parts[1]
+  }
+  if (self._hostname) opts.localAddress = self._hostname
+
+  var conn = peer.conn = net.connect(opts)
 
   conn.once('connect', function () { peer.onConnect() })
   conn.once('error', function (err) { peer.destroy(err) })
