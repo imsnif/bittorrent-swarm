@@ -91,7 +91,7 @@ Object.defineProperty(Swarm.prototype, 'numConns', {
     var numConns = 0
     for (var id in self._peers) {
       var peer = self._peers[id]
-      if (peer && peer.conn) numConns += 1
+      if (peer && peer.connected) numConns += 1
     }
     return numConns
   }
