@@ -134,8 +134,6 @@ Swarm.prototype._addPeer = function (peer) {
   if (typeof peer === 'string') {
     // `peer` is an addr ("ip:port" string)
     newPeer = Peer.createOutgoingTCPPeer(peer, self)
-    self._queue.push(newPeer)
-    self._drain()
   } else {
     // `peer` is a WebRTC connection (simple-peer)
     if (self.paused) {
@@ -144,8 +142,16 @@ Swarm.prototype._addPeer = function (peer) {
     }
     newPeer = Peer.createWebRTCPeer(peer, self)
   }
+
   self._peers[newPeer.id] = newPeer
   self._peersLength += 1
+
+  if (typeof peer === 'string') {
+    // `peer` is an addr ("ip:port" string)
+    self._queue.push(newPeer)
+    self._drain()
+  }
+
   return newPeer
 }
 
