@@ -133,6 +133,10 @@ Swarm.prototype.addPeer = function (peer) {
     self._drain()
   } else {
     // `peer` is a WebRTC connection (simple-peer)
+    if (self.paused) {
+      peer.destroy(new Error('swarm paused'))
+      return null
+    }
     newPeer = Peer.createWebRTCPeer(peer, self)
   }
   self._peers[newPeer.id] = newPeer
