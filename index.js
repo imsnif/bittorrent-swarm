@@ -239,7 +239,7 @@ Swarm.prototype.listen = function (port, hostname, onlistening) {
 
   if (self.listening) throw new Error('swarm already listening')
 
-  if (process.browser) {
+  if (process.browser && onlistening) {
     onlistening()
   } else {
     self._port = port || TCPPool.getDefaultListenPort(self.infoHashHex)
