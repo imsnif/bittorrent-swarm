@@ -195,6 +195,9 @@ Swarm.prototype.removePeer = function (id) {
   self._peersLength -= 1
 
   peer.destroy()
+
+  // If swarm was at capacity before, try to open a new connection now
+  self._drain()
 }
 
 /**
