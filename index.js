@@ -111,13 +111,18 @@ Object.defineProperty(Swarm.prototype, 'numPeers', {
  */
 Swarm.prototype.addPeer = function (peer) {
   var self = this
+  self._addPeer(peer) // don't expose private Peer instance in return value
+}
+
+Swarm.prototype._addPeer = function (peer) {
+  var self = this
   if (self.destroyed) {
     if (peer && peer.destroy) peer.destroy(new Error('swarm already destroyed'))
-    return
+    return null
   }
   if (typeof peer === 'string' && !self._validAddr(peer)) {
     debug('ignoring invalid peer %s (from swarm.addPeer)', peer)
-    return
+    return null
   }
 
   var id = (peer && peer.id) || peer
@@ -127,7 +132,7 @@ Swarm.prototype.addPeer = function (peer) {
 
   var newPeer
   if (typeof peer === 'string') {
-    // `peer` in an addr ("ip:port" string)
+    // `peer` is an addr ("ip:port" string)
     newPeer = Peer.createOutgoingTCPPeer(peer, self)
     self._queue.push(newPeer)
     self._drain()
@@ -141,6 +146,7 @@ Swarm.prototype.addPeer = function (peer) {
   }
   self._peers[newPeer.id] = newPeer
   self._peersLength += 1
+  return newPeer
 }
 
 /**
@@ -341,21 +347,17 @@ Swarm.prototype._drain = function () {
       return
     }
 
-    function readd () {
-      var newPeer = Peer.createOutgoingTCPPeer(peer.addr, self)
-      newPeer.retries = peer.retries + 1
-      self._queue.push(newPeer)
-      self._drain()
-    }
-
     var ms = RECONNECT_WAIT[peer.retries]
     debug(
       'conn %s closed: will re-add to queue in %sms (attempt %s)',
       peer.addr, ms, peer.retries + 1
     )
 
-    var readdTimeout = setTimeout(readd, ms)
-    if (readdTimeout.unref) readdTimeout.unref()
+    var reconnectTimeout = setTimeout(function reconnectTimeout () {
+      var newPeer = self._addPeer(peer.addr)
+      if (newPeer) newPeer.retries = peer.retries + 1
+    }, ms)
+    if (reconnectTimeout.unref) reconnectTimeout.unref()
   })
 }
 
