@@ -35,10 +35,10 @@ function Swarm (infoHash, peerId, opts) {
   if (!(self instanceof Swarm)) return new Swarm(infoHash, peerId, opts)
   EventEmitter.call(self)
 
-  self.infoHash = typeof infoHash === 'string'
+  self.infoHashBuffer = typeof infoHash === 'string'
     ? new Buffer(infoHash, 'hex')
     : infoHash
-  self.infoHashHex = self.infoHash.toString('hex')
+  self.infoHash = self.infoHashBuffer.toString('hex')
 
   self.peerId = typeof peerId === 'string'
     ? new Buffer(peerId, 'hex')
@@ -47,7 +47,7 @@ function Swarm (infoHash, peerId, opts) {
 
   if (!opts) opts = {}
 
-  debug('new swarm (i %s p %s)', self.infoHashHex, self.peerIdHex)
+  debug('new swarm (i %s p %s)', self.infoHash, self.peerIdHex)
 
   self.handshakeOpts = opts.handshake // handshake extensions (optional)
   self.maxConns = opts.maxConns !== undefined ? opts.maxConns : MAX_CONNS
@@ -259,7 +259,7 @@ Swarm.prototype.listen = function (port, hostname, onlistening) {
   if (process.browser && onlistening) {
     onlistening()
   } else {
-    self._port = port || TCPPool.getDefaultListenPort(self.infoHashHex)
+    self._port = port || TCPPool.getDefaultListenPort(self.infoHash)
     self._hostname = hostname
     if (onlistening) self.once('listening', onlistening)
 
