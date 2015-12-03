@@ -35,19 +35,19 @@ function Swarm (infoHash, peerId, opts) {
   if (!(self instanceof Swarm)) return new Swarm(infoHash, peerId, opts)
   EventEmitter.call(self)
 
-  self.infoHashBuffer = typeof infoHash === 'string'
-    ? new Buffer(infoHash, 'hex')
-    : infoHash
-  self.infoHash = self.infoHashBuffer.toString('hex')
+  self.infoHash = typeof infoHash === 'string'
+    ? infoHash
+    : infoHash.toString('hex')
+  self.infoHashBuffer = new Buffer(self.infoHash, 'hex')
 
   self.peerId = typeof peerId === 'string'
-    ? new Buffer(peerId, 'hex')
-    : peerId
-  self.peerIdHex = self.peerId.toString('hex')
+    ? peerId
+    : peerId.toString('hex')
+  self.peerIdBuffer = new Buffer(self.peerId, 'hex')
 
   if (!opts) opts = {}
 
-  debug('new swarm (i %s p %s)', self.infoHash, self.peerIdHex)
+  debug('new swarm (i %s p %s)', self.infoHash, self.peerId)
 
   self.handshakeOpts = opts.handshake // handshake extensions (optional)
   self.maxConns = opts.maxConns !== undefined ? opts.maxConns : MAX_CONNS
