@@ -9,6 +9,8 @@
 
 ### Simple, robust, BitTorrent "swarm" implementation
 
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/bittorrent-swarm.svg)](https://saucelabs.com/u/bittorrent-swarm)
+
 This is a node.js abstraction of a BitTorrent "swarm", which is handy for
 managing all peer connections for a given torrent download. This handles
 connecting to peers, listening for incoming connections, and doing the initial

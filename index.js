@@ -2,13 +2,13 @@ module.exports = Swarm
 
 var addrToIPPort = require('addr-to-ip-port') // browser exclude
 var debug = require('debug')('bittorrent-swarm')
-var dezalgo = require('dezalgo')
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
 var net = require('net') // browser exclude
-var Peer = require('./lib/peer')
 var speedometer = require('speedometer')
-var TCPPool = require('./lib/tcp-pool')
+
+var Peer = require('./lib/peer')
+var TCPPool = require('./lib/tcp-pool') // browser-exclude
 
 var MAX_CONNS = 55
 var RECONNECT_WAIT = [ 1000, 5000, 15000 ]
@@ -252,21 +252,23 @@ Swarm.prototype.listen = function (port, hostname, onlistening) {
     onlistening = hostname
     hostname = undefined
   }
-  if (onlistening) onlistening = dezalgo(onlistening)
-
   if (self.listening) throw new Error('swarm already listening')
+  if (onlistening) self.once('listening', onlistening)
 
-  if (process.browser && onlistening) {
-    onlistening()
-  } else {
+  if (typeof TCPPool === 'function') {
     self._port = port || TCPPool.getDefaultListenPort(self.infoHash)
     self._hostname = hostname
-    if (onlistening) self.once('listening', onlistening)
 
     debug('listen %s', port)
 
     var pool = TCPPool.addSwarm(self)
     self.server = pool.server
+  } else {
+    // In browser, listen() is no-op, but still fire 'listening' event so that
+    // same code works in node and the browser.
+    process.nextTick(function () {
+      self._onListening(0)
+    })
   }
 }
 
@@ -279,7 +281,10 @@ Swarm.prototype._onListening = function (port) {
 
 Swarm.prototype.address = function () {
   var self = this
-  return self.server.address()
+  if (!self.listening) return null
+  return self.server
+    ? self.server.address()
+    : { port: 0, family: 'IPv4', address: '127.0.0.1' }
 }
 
 /**
@@ -302,10 +307,16 @@ Swarm.prototype.destroy = function (onclose) {
     self.removePeer(id)
   }
 
-  TCPPool.removeSwarm(self, function () {
-    // TODO: only emit when all peers are destroyed
-    self.emit('close')
-  })
+  if (typeof TCPPool === 'function') {
+    TCPPool.removeSwarm(self, function () {
+      // TODO: only emit when all peers are destroyed
+      self.emit('close')
+    })
+  } else {
+    process.nextTick(function () {
+      self.emit('close')
+    })
+  }
 }
 
 /**

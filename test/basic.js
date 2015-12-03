@@ -1,5 +1,4 @@
 var hat = require('hat')
-var portfinder = require('portfinder')
 var Swarm = require('../')
 var test = require('tape')
 
@@ -20,20 +19,6 @@ test('create swarm, check invariants', function (t) {
   t.end()
 })
 
-test('swarm listen (explicit port)', function (t) {
-  t.plan(1)
-
-  var swarm = new Swarm(infoHash, peerId)
-  portfinder.getPort(function (err, port) {
-    if (err) throw err
-    swarm.listen(port)
-    swarm.on('listening', function () {
-      t.equal(port, swarm.address().port)
-      swarm.destroy()
-    })
-  })
-})
-
 test('swarm listen(0) selects free port', function (t) {
   t.plan(2)
 
@@ -42,27 +27,12 @@ test('swarm listen(0) selects free port', function (t) {
   swarm.on('listening', function () {
     var port = swarm.address().port
     t.equal(typeof port, 'number', 'port is a number')
-    t.ok(port > 0 && port < 65535, 'valid port number')
+    if (process.browser) {
+      t.equal(port, 0, 'port number is 0')
+    } else {
+      t.ok(port > 0 && port < 65535, 'valid port number')
+    }
     swarm.destroy()
-  })
-})
-
-test('two swarms listen on same port (explicit)', function (t) {
-  t.plan(2)
-
-  var swarm1 = new Swarm(infoHash, peerId)
-  portfinder.getPort(function (err, port) {
-    if (err) throw err
-    swarm1.listen(port, function () {
-      t.equal(swarm1.address().port, port, 'listened on requested port')
-
-      var swarm2 = new Swarm(infoHash2, peerId)
-      swarm2.listen(port, function () {
-        t.equal(swarm2.address().port, port, 'listened on requested port')
-        swarm1.destroy()
-        swarm2.destroy()
-      })
-    })
   })
 })
 
@@ -82,10 +52,18 @@ test('two swarms listen on same port (implicit)', function (t) {
       t.equal(swarm1Port, swarm2Port, 'swarms were given same port')
 
       t.equal(typeof swarm1Port, 'number', 'port is a number')
-      t.ok(swarm1Port > 0 && swarm1Port < 65535, 'valid port number')
+      if (process.browser) {
+        t.equal(swarm1Port, 0, 'port number is 0')
+      } else {
+        t.ok(swarm1Port > 0 && swarm1Port < 65535, 'valid port number')
+      }
 
       t.equal(typeof swarm2Port, 'number', 'port is a number')
-      t.ok(swarm2Port > 0 && swarm2Port < 65535, 'valid port number')
+      if (process.browser) {
+        t.equal(swarm2Port, 0, 'port number is 0')
+      } else {
+        t.ok(swarm2Port > 0 && swarm2Port < 65535, 'valid port number')
+      }
 
       swarm1.destroy()
       swarm2.destroy()
@@ -100,42 +78,5 @@ test('two swarms listen on same port (implicit)', function (t) {
   swarm2.listen(0, function (port2) {
     swarm2Port = swarm2.address().port
     maybeDone()
-  })
-})
-
-test('swarm join', function (t) {
-  t.plan(10)
-
-  var swarm1 = new Swarm(infoHash, peerId)
-  portfinder.getPort(function (err, port) {
-    if (err) throw err
-    swarm1.listen(port, function () {
-      var swarm2 = new Swarm(infoHash, peerId2)
-
-      t.equal(swarm1.wires.length, 0)
-      t.equal(swarm2.wires.length, 0)
-
-      swarm2.addPeer('127.0.0.1:' + swarm1.address().port)
-
-      swarm1.on('wire', function (wire, addr) {
-        t.ok(wire, 'Peer join our swarm via listening port')
-
-        t.equal(swarm1.wires.length, 1)
-        t.ok(/127\.0\.0\.1:\d{1,5}/.test(addr))
-        t.equal(wire.peerId.toString('hex'), peerId2)
-
-        swarm1.destroy()
-      })
-
-      swarm2.on('wire', function (wire, addr) {
-        t.ok(wire, 'Joined swarm, got wire')
-
-        t.equal(swarm2.wires.length, 1)
-        t.ok(/127\.0\.0\.1:\d{1,5}/.test(addr))
-        t.equal(wire.peerId.toString('hex'), peerId)
-
-        swarm2.destroy()
-      })
-    })
   })
 })
