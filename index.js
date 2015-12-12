@@ -52,6 +52,8 @@ function Swarm (infoHash, peerId, opts) {
   self.handshakeOpts = opts.handshake // handshake extensions (optional)
   self.maxConns = opts.maxConns !== undefined ? opts.maxConns : MAX_CONNS
 
+  self.throttleGroups = opts.throttleGroups
+
   self.destroyed = false
   self.listening = false
   self.paused = false
@@ -317,6 +319,24 @@ Swarm.prototype.destroy = function (onclose) {
       self.emit('close')
     })
   }
+}
+
+Swarm.prototype.updateDownloadThrottle = function () {
+  var self = this
+  Object.keys(self._peers).forEach(function (peerId) {
+    if (self._peers[peerId] && self._peers[peerId].updateDownloadThrottle) {
+      self._peers[peerId].updateDownloadThrottle()
+    }
+  })
+}
+
+Swarm.prototype.updateUploadThrottle = function () {
+  var self = this
+  Object.keys(self._peers).forEach(function (peerId) {
+    if (self._peers[peerId] && self._peers[peerId].updateUploadThrottle) {
+      self._peers[peerId].updateUploadThrottle()
+    }
+  })
 }
 
 /**
